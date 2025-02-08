@@ -1,0 +1,12 @@
+python3 -m http.server
+--------------------------------
+nmap -p 1-65535 -A -T4 -sV -sC <ip> 
+nmap --top-ports 20 <ip>
+nmap -Pn --script vuln <ip>
+----------------------------
+nc -nv <ip>
+----------------------------
+gobuster dir -u https://example.com -w /Discovery/Web-Content/common.txt
+gobuster fuzz -u "http://example.com/index.php?page=FUZZ" -w /Fuzzing/LFI-fuzzing.txt
+
+https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master
